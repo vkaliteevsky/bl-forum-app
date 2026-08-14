@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Blockchain Life · Networking — clickable prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#070D2E; --scr:#0A1140; --panel:#0E1745; --panel2:#121C50; --line:#1B2560;
+ --blue:#2F6BFF; --blue2:#1E3A8A; --cyan:#00D1FF; --gold:#FFD60A; --green:#22C55E; --pink:#FF3B7A;
+ --text:#FFF; --muted:#93A0C9; --dim:#5B6795;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+ font-family:'Space Grotesk','Manrope',system-ui,sans-serif;background:var(--bg);color:var(--text);
+ display:flex;align-items:center;justify-content:center;min-height:100vh;
+ -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+.caption{position:fixed;bottom:16px;left:0;right:0;text-align:center;font-size:11px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.phone{
+ width:375px;height:812px;max-height:96vh;aspect-ratio:375/812;
+ background:#0A1140;border:1px solid #26326E;border-radius:48px;padding:10px;
+ box-shadow:0 40px 100px rgba(0,0,0,.6);position:relative;flex:none;transform-origin:center;
+}
+@media(max-height:860px){.phone{transform:scale(calc(96vh/832))}}
+@media(max-width:430px){
+ body{align-items:stretch}
+ .phone{width:100vw;height:100vh;max-height:none;border:none;border-radius:0;padding:0;transform:none;box-shadow:none}
+ .screen{border-radius:0}
+ .caption{display:none}
+}
+.screen{width:100%;height:100%;border-radius:38px;overflow:hidden;background:var(--scr);display:flex;flex-direction:column;position:relative}
+.statusbar{height:40px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:2px 24px 0;font-size:13px;font-weight:700}
+.statusbar .r{font-size:10px;letter-spacing:1.5px}
+#view{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+.pagetitle{font-size:20px;font-weight:700;letter-spacing:-.02em;padding:6px 16px 12px;flex:none}
+.ph1{font-size:20px;font-weight:700;letter-spacing:-.02em;padding:6px 16px 0;flex:none}
+.ph2{font-size:9.5px;color:var(--cyan);letter-spacing:.2em;text-transform:uppercase;font-weight:700;padding:3px 16px 12px;flex:none}
+
+.tabbar{height:64px;flex:none;background:#0D1548;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;padding:0 14px}
+.tab{position:relative;padding:8px;cursor:pointer;border:none;background:none}
+.tab svg{width:23px;height:23px;stroke:#3D63D8;fill:none;stroke-width:1.8;display:block;stroke-linecap:round;stroke-linejoin:round}
+.tab.on svg{stroke:var(--blue)}
+.tab .bdg{position:absolute;top:6px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--pink);border:2px solid #0D1548}
+
+/* picker */
+.picker{flex:1;display:flex;flex-direction:column;padding:22px 22px 30px;overflow:auto}
+.picker .kick{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+.picker h1{font-size:26px;font-weight:800;line-height:1.15;margin-bottom:8px}
+.picker .sub{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:22px}
+.rolebtn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;margin-bottom:12px;cursor:pointer;color:var(--text);font-family:inherit}
+.rolebtn:active{background:var(--panel2)}
+.rolebtn .ric{width:38px;height:38px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center}
+.rolebtn .ric svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
+.rolebtn b{display:block;font-size:15px;font-weight:800}
+.rolebtn small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.picker .note{margin-top:auto;font-size:10.5px;color:var(--dim);line-height:1.5;padding-top:16px}
+
+/* avatars with photo + fallback */
+.pav{position:relative;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+.pav img{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%;object-fit:cover}
+.pav.logo{background:#fff !important}
+.pav.logo img{object-fit:contain;padding:18%}
+
+/* feed */
+.feedwrap{flex:1;position:relative;padding:6px 14px 14px;min-height:0}
+.stack{position:absolute;top:6px;right:14px;bottom:14px;left:14px}
+.fcard{position:absolute;top:0;right:0;bottom:0;left:0;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;touch-action:none;user-select:none;background:#0B1746;will-change:transform}
+.fcard.under{transform:scale(.96) translateY(10px);filter:brightness(.75)}
+.fcard .photo,.hero .photo{position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(180deg,#13234E,#081137)}
+.fcard .photo img,.hero .photo img{width:100%;height:100%;object-fit:cover;opacity:.55}
+.fcard .shade,.hero .shade{position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(180deg,rgba(6,10,38,.15) 0%,transparent 26%,transparent 40%,rgba(6,10,38,.9) 70%,rgba(6,10,38,.98) 100%)}
+.ava-big{position:absolute;top:24%;left:50%;transform:translate(-50%,-50%);width:156px;height:156px;border-radius:50%;font-size:50px;border:3px solid rgba(255,255,255,.35)}
+.ava-big.sq{border-radius:28px}
+.fcard .top,.hero .top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:flex-start;padding:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:10px;padding:6px 10px}
+.chip.ghost{background:rgba(10,16,50,.55);color:#C9D2F2;backdrop-filter:blur(4px)}
+.chip.linkc{background:#2BE080;color:#05250F;font-size:10.5px;border-radius:7px;padding:5px 9px}
+.chip svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.rolelb{font-size:10px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:#CFE0FF;padding-top:3px}
+.fcard .info,.hero .info{position:relative;z-index:2;margin-top:auto;padding:0 18px 16px}
+.fcard .name,.hero .name{font-size:31px;font-weight:700;line-height:.98;letter-spacing:-.03em}
+.fcard .loc,.hero .loc{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9FB0DC;margin:9px 0 7px;font-weight:600}
+.fcard .bio,.hero .bio{font-size:12.5px;line-height:1.55;color:#C7CFEE;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tags{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.tag-b{background:var(--blue);border-radius:8px;font-size:11px;font-weight:700;padding:5px 9px}
+.tagsA{font-size:12.5px;color:var(--cyan);font-weight:700;margin-top:9px;letter-spacing:.01em}
+.factions{display:flex;gap:9px;margin-top:15px}
+.bbar{flex:1;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;border:none}
+.bbar.skipb{background:rgba(7,13,46,.4);border:1.5px solid #33427E;color:var(--muted)}
+.bbar.connb{background:var(--blue);color:#fff}
+.stamp{position:absolute;top:56px;font-size:26px;font-weight:800;letter-spacing:.08em;padding:8px 16px;border:3px solid;border-radius:12px;z-index:3;opacity:0;transform:rotate(-12deg)}
+.stamp.like{right:22px;color:var(--green);border-color:var(--green);transform:rotate(10deg)}
+.stamp.nope{left:22px;color:var(--pink);border-color:var(--pink)}
+.fempty{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);text-align:center;padding:0 40px}
+.fempty .big{font-size:40px}
+.fempty b{color:var(--text)}
+.linkbtn{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:11px 18px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+
+/* sponsor themes */
+.spcard .photo.goldgrad{background:
+ linear-gradient(115deg,transparent 32%,rgba(255,255,255,.32) 45%,transparent 58%),
+ radial-gradient(120% 90% at 82% 8%,#FFF3C4 0%,transparent 45%),
+ radial-gradient(100% 80% at 8% 96%,#7A4A03 0%,transparent 55%),
+ linear-gradient(160deg,#FFDf7E 0%,#F2B93B 32%,#D89A18 55%,#A66E08 78%,#6E4503 100%)}
+.spcard .photo.diamond{background:
+ linear-gradient(115deg,transparent 32%,rgba(255,255,255,.4) 45%,transparent 58%),
+ radial-gradient(120% 90% at 82% 8%,#EAF6FF 0%,transparent 45%),
+ radial-gradient(100% 80% at 8% 96%,#101B4B 0%,transparent 55%),
+ linear-gradient(160deg,#BFE0FF 0%,#7FB8FF 30%,#3D63D8 60%,#1B2A6B 100%)}
+.spcard .photo.platinum{background:
+ linear-gradient(115deg,transparent 32%,rgba(255,255,255,.4) 45%,transparent 58%),
+ radial-gradient(120% 90% at 82% 8%,#F2F6FC 0%,transparent 45%),
+ radial-gradient(100% 80% at 8% 96%,#1C2333 0%,transparent 55%),
+ linear-gradient(160deg,#DDE6F2 0%,#9FB0C8 32%,#5A6B85 62%,#232B3E 100%)}
+.spcard .photo.silverg{background:
+ linear-gradient(115deg,transparent 32%,rgba(255,255,255,.3) 45%,transparent 58%),
+ radial-gradient(120% 90% at 82% 8%,#EDEFF3 0%,transparent 45%),
+ radial-gradient(100% 80% at 8% 96%,#23272E 0%,transparent 55%),
+ linear-gradient(160deg,#C9CFD9 0%,#9AA2AE 35%,#5F6773 65%,#2A2F38 100%)}
+.spcard .photo.orange{background:radial-gradient(120% 90% at 80% 10%,#FFB35C 0%,transparent 55%),radial-gradient(120% 90% at 10% 90%,#E2540A 0%,transparent 60%),linear-gradient(160deg,#F58A2E 0%,#E9660E 45%,#C74A05 100%)}
+.spcard .photo.blue{background:radial-gradient(120% 90% at 80% 10%,#4D7DFF 0%,transparent 55%),radial-gradient(120% 90% at 10% 90%,#12245F 0%,transparent 60%),linear-gradient(160deg,#2F54EB 0%,#1E3A8A 60%,#101B4B 100%)}
+.spcard .photo.navy{background:radial-gradient(120% 90% at 80% 10%,#3D63D8 0%,transparent 50%),linear-gradient(160deg,#1B2A6B 0%,#101B4B 55%,#0A1030 100%)}
+.spcard .photo.teal{background:radial-gradient(120% 90% at 80% 10%,#2BE0C8 0%,transparent 55%),radial-gradient(120% 90% at 10% 90%,#0A5E57 0%,transparent 60%),linear-gradient(160deg,#0FB5AE 0%,#0A7E78 55%,#093B4F 100%)}
+.spcard .photo.violet{background:radial-gradient(120% 90% at 80% 10%,#B98CFF 0%,transparent 55%),radial-gradient(120% 90% at 10% 90%,#3A1D7A 0%,transparent 60%),linear-gradient(160deg,#7A5CFF 0%,#5B3BD6 55%,#2A1660 100%)}
+.spcard .photo.green{background:radial-gradient(120% 90% at 80% 10%,#5FE39A 0%,transparent 55%),linear-gradient(160deg,#1E9E5C 0%,#136A46 55%,#0B3A2C 100%)}
+.spcard .photo.goldth{background:radial-gradient(120% 90% at 80% 10%,#FFE28A 0%,transparent 55%),linear-gradient(160deg,#D9A410 0%,#A97B08 55%,#5F4404 100%)}
+.spcard .photo.red{background:radial-gradient(120% 90% at 80% 10%,#FF8AA6 0%,transparent 55%),linear-gradient(160deg,#E23A5E 0%,#B01F42 55%,#5C0F24 100%)}
+.sp-chipw{position:absolute;top:14px;left:14px;display:flex;gap:9px;align-items:center;background:#fff;border-radius:12px;padding:8px 13px 8px 8px;z-index:2}
+.sp-chipw .logo{width:34px;height:34px;border-radius:9px;flex:none;font-size:13px}
+.sp-chipw .n{font-size:12.5px;font-weight:800;color:#101010;line-height:1.25}
+.sp-chipw .s{font-size:10px;font-weight:800;letter-spacing:.03em}
+.sp-chipw .s.gold{color:#B8860B}.sp-chipw .s.dia{color:#3D63D8}.sp-chipw .s.plat{color:#5A6B85}.sp-chipw .s.silv{color:#6E7683}
+.sp-x{position:absolute;top:16px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(10,14,40,.35);display:flex;align-items:center;justify-content:center;z-index:2;cursor:pointer;border:none;backdrop-filter:blur(3px)}
+.sp-x svg{width:15px;height:15px;stroke:#fff;stroke-width:2.4;fill:none}
+.glass{margin:auto 20px;background:rgba(255,255,255,.72);backdrop-filter:blur(6px);border-radius:18px;padding:24px 16px;text-align:center;border:1px solid rgba(255,255,255,.8);position:relative;z-index:2}
+.glass .wm{font-size:26px;font-weight:800;color:#161616}
+.glass .tg{font-size:11px;font-weight:600;color:#3A3A3A;margin-top:7px;line-height:1.45}
+.sp-cta{margin:0 20px 20px;height:50px;border-radius:14px;background:#0C1445;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;position:relative;z-index:2;cursor:pointer;border:none;font-family:inherit;width:calc(100% - 40px)}
+
+/* detail */
+.detail{flex:1;overflow:auto;padding:0 14px 20px}
+.detail .hero{border-radius:20px;overflow:hidden;position:relative;height:430px;display:flex;flex-direction:column;flex:none}
+.backbtn{position:absolute;top:14px;left:14px;z-index:3;width:34px;height:34px;border-radius:50%;background:rgba(10,16,50,.6);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.backbtn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.2}
+.sect{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:12px}
+.sect h4{font-size:9.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:9px}
+.sect p{font-size:12.5px;line-height:1.6;color:var(--muted)}
+.sect .row{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);padding:6px 0}
+.sect .row svg{width:16px;height:16px;stroke:var(--blue);fill:none;stroke-width:2;flex:none}
+.dactions{display:flex;gap:10px;margin-top:14px}
+.dprim{flex:1.4;height:50px;border-radius:14px;background:var(--blue);color:#fff;font-size:15px;font-weight:800;border:none;font-family:inherit;cursor:pointer}
+.dskip{flex:1;height:50px;border-radius:14px;background:none;border:1.5px solid #33427E;color:var(--muted);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer}
+.mrow{display:flex;align-items:center;gap:11px;padding:11px 4px;border-top:1px solid #17215A;cursor:pointer}
+.mrow:first-of-type{border-top:none}
+.mrow .mic{width:34px;height:34px;border-radius:10px;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex:none}
+.mrow .mic svg{width:17px;height:17px;stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mrow .ml{flex:1;font-size:13px;font-weight:700;color:#CFE0FF;text-decoration:underline;text-decoration-color:#33427E;text-underline-offset:3px}
+.mrow .mx{flex:none}
+.mrow .mx svg{width:15px;height:15px;stroke:var(--dim);fill:none;stroke-width:2;stroke-linecap:round}
+
+/* list rows (chats / incoming / outgoing) */
+.connwrap{flex:1;overflow:auto;padding-bottom:8px}
+.stories{display:flex;gap:11px;padding:2px 16px 16px;overflow-x:auto}
+.story{width:64px;flex:none;text-align:center;cursor:pointer}
+.story .av{width:60px;height:60px;border-radius:50%;font-size:19px;position:relative;margin:0 auto}
+.story .on2::after{content:"";position:absolute;right:2px;bottom:2px;width:12px;height:12px;border-radius:4px;background:var(--green);border:2.5px solid var(--scr);z-index:2}
+.story small{display:block;font-size:9.5px;color:var(--muted);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.citem{position:relative;overflow:hidden;border-top:1px solid #121B52}
+.crow{display:flex;gap:12px;align-items:center;padding:12px 16px;background:var(--scr);position:relative;z-index:2;transition:transform .18s;cursor:pointer;touch-action:pan-y}
+.crow .av{width:56px;height:56px;border-radius:50%;font-size:17px}
+.crow .avwrap{position:relative;flex:none}
+.crow .dot{position:absolute;right:1px;bottom:1px;width:12px;height:12px;border-radius:4px;background:var(--green);border:2.5px solid var(--scr);z-index:2}
+.crow .t{min-width:0;flex:1}
+.crow .n{font-size:15px;font-weight:800}
+.crow .m{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.crow .m.unread{color:#DDE4FA;font-weight:700}
+.crow .meta{flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.crow .tm{font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.crow .ub{width:9px;height:9px;border-radius:50%;background:var(--blue)}
+.pill{font-size:9.5px;font-weight:800;border-radius:8px;padding:4px 8px;letter-spacing:.03em;white-space:nowrap}
+.pill.sent{background:#3A2A0E;color:#FFC554;border:1px solid #6B4E14}
+.pill.noreply{background:#14264F;color:#7FA7FF;border:1px solid #24407E}
+.accbtn{height:34px;padding:0 15px;border-radius:10px;background:var(--blue);border:none;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;flex:none}
+.cacts{position:absolute;top:0;right:0;bottom:0;display:flex;z-index:1}
+.cact{width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:10.5px;font-weight:800;border:none;color:#fff;cursor:pointer;font-family:inherit}
+.cact svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
+.cact.un{background:#141E56}.cact.met{background:var(--blue)}
+.hiddenrow{display:flex;justify-content:space-between;align-items:center;padding:16px;color:var(--muted);font-size:14px;font-weight:800;border-top:1px solid #121B52;cursor:pointer}
+.hiddenrow svg{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2}
+.emptylist{padding:60px 40px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+
+/* chat */
+.chathead{display:flex;align-items:center;gap:11px;padding:4px 14px 12px;border-bottom:1px solid var(--line);flex:none}
+.chathead .av{width:40px;height:40px;border-radius:50%;font-size:13px}
+.chathead .n{font-size:14.5px;font-weight:800}
+.chathead .st{font-size:10.5px;color:var(--green);margin-top:1px}
+.chathead .back{background:none;border:none;cursor:pointer;padding:4px}
+.chathead .back svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.2}
+.msgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:76%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.45}
+.msg.them{background:var(--panel2);align-self:flex-start;border-bottom-left-radius:5px}
+.msg.me{background:var(--blue);align-self:flex-end;border-bottom-right-radius:5px}
+.typing{align-self:flex-start;color:var(--dim);font-size:11px;padding-left:4px}
+.composer{display:flex;gap:9px;padding:10px 14px 14px;flex:none;border-top:1px solid var(--line)}
+.composer input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:22px;height:44px;padding:0 16px;color:#fff;font-family:inherit;font-size:13.5px;outline:none}
+.composer button{width:44px;height:44px;border-radius:50%;background:var(--blue);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.composer button svg{width:19px;height:19px;stroke:#fff;fill:none;stroke-width:2.2}
+
+/* analytics */
+.anwrap{flex:1;overflow:auto;padding:0 16px 16px}
+.periods{display:flex;gap:8px;padding-bottom:18px}
+.per{font-size:11.5px;font-weight:700;border-radius:16px;padding:7px 13px;background:#141E56;color:var(--muted);border:none;font-family:inherit;cursor:pointer}
+.per.on{background:var(--blue);color:#fff}
+.km{font-size:15px;font-weight:800}
+.km-sub{font-size:11.5px;color:var(--muted);margin:3px 0 14px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcard{background:var(--panel2);border-radius:14px;padding:13px 14px}
+.mcard .l{font-size:11px;color:#C4CCEB;font-weight:600}
+.mcard .v{font-size:22px;font-weight:800;margin:4px 0 7px}
+.mcard .d{font-size:10.5px;font-weight:700;display:flex;align-items:center;gap:4px}
+.mcard .d.neg{color:var(--pink)}.mcard .d.pos{color:var(--green)}
+.mcard .d svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* my profile */
+.mywrap{flex:1;overflow:auto;padding:0 16px 16px}
+.mycard{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+.mycard .av{width:64px;height:64px;border-radius:50%;font-size:21px}
+.mycard .n{font-size:17px;font-weight:800}
+.mycard .r{display:inline-flex;margin-top:6px;font-size:10.5px;font-weight:800;background:var(--blue2);border-radius:8px;padding:4px 9px;color:#C9D6FF;letter-spacing:.04em}
+.setgrp{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.setrow{display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid #121B52;font-size:13.5px;font-weight:700;cursor:pointer}
+.setrow:first-child{border-top:none}
+.setrow svg{width:19px;height:19px;stroke:var(--blue);fill:none;stroke-width:2;flex:none}
+.setrow .chev{margin-left:auto;stroke:var(--dim)}
+.seg{margin-left:auto;display:flex;background:#141E56;border-radius:10px;padding:3px}
+.seg button{border:none;background:none;color:var(--muted);font-family:inherit;font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--blue);color:#fff}
+
+.toast{position:absolute;bottom:84px;left:50%;transform:translateX(-50%) translateY(8px);z-index:30;background:#1A2660;border:1px solid #2A3A80;color:#fff;font-size:12.5px;font-weight:700;padding:10px 16px;border-radius:12px;opacity:0;transition:.22s;pointer-events:none;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+::-webkit-scrollbar{width:0;height:0}
+</style>
+</head>
+<body>
+
+<div class="phone"><div class="screen">
+ <div class="statusbar"><span>9:41</span><span class="r">▮▮▮ ᯤ ▭</span></div>
+ <noscript><div style="padding:60px 28px;text-align:center;font-size:14px;line-height:1.7;color:#93A0C9">
+   <div style="font-size:34px;margin-bottom:14px">🤝</div>
+   <b style="color:#fff">Это интерактивный прототип</b><br><br>
+   Предпросмотр файла не запускает интерактив.<br>
+   Откройте прототип по ссылке в браузере —<br>Safari, Chrome или встроенный браузер Telegram.
+ </div></noscript>
+ <div id="view"></div>
+ <div id="tabs"></div>
+ <div class="toast" id="toast"></div>
+</div></div>
+<div class="caption">Blockchain Life · Networking — clickable prototype</div>
+
+<script>
+/* ==== DATA v2 ==== */
+const GRADS = [
+ ["#F2994A","#EB5757"],["#2F6BFF","#56CCF2"],["#9B51E0","#BB6BD9"],["#219653","#6FCF97"],
+ ["#EB5757","#9B51E0"],["#56CCF2","#219653"],["#FF7A59","#FFD60A"],["#7A5CFF","#2F6BFF"],
+ ["#0FB5AE","#2F6BFF"],["#E2540A","#FFB35C"],["#C74A05","#F2994A"],["#3D63D8","#7A5CFF"]
+];
+function grad(i){const g=GRADS[i%GRADS.length];return `linear-gradient(135deg,${g[0]},${g[1]})`;}
+/* photo helpers: sex 'm'/'w' + pn -> randomuser portrait; companies: domain -> logo, seed -> picsum bg */
+const portrait = p => p.sex ? `https://randomuser.me/api/portraits/${p.sex==="m"?"men":"women"}/${p.pn}.jpg` : null;
+const logoUrl  = p => p.domain ? `https://www.google.com/s2/favicons?domain=${p.domain}&sz=128` : null;
+const coverUrl = p => `https://picsum.photos/seed/${p.seed||p.id}/500/800`;
+
+const PROFILES = [
+ /* --- people: investors --- */
+ {id:"liu", mats:["Fund one-pager.pdf","scryptinc.com"], name:"Liu Xiaoyin", role:"inv", city:"Shanghai, China", link:"scryptinc.com", sex:"w", pn:44, seed:"shanghai7",
+  bio:"Hi! We invest in ambitious early-stage projects (from Pre-Seed to Series A) in the fields of artificial intelligence, blockchain, healthtech, and web3. Our fund has already invested over $100M, and our network includes over 6,000 investors. Who is currently building their project or raising a funding round? Let's connect",
+  tags:["AI","Blockchain","Web3"], more:"Cheque size $200K–$2M. We lead or co-invest. Reply fastest to a 10-slide deck and a 3-line intro."},
+ {id:"ainie", name:"Ainie Lin 爱妮·林", role:"inv", city:"Singapore", link:"", sex:"w", pn:65, seed:"sg21",
+  bio:"Angel investor, ex-exchange BD. 40+ deals in web3 infrastructure and consumer crypto. I like teams that ship weekly.",
+  tags:["Angel","Infra","Consumer"], more:"Typical cheque $25–75K. Intro me your traction, not your vision slide."},
+ {id:"daniil", name:"Daniil Orlov", role:"inv", city:"Moscow, Russia", link:"northbeam.vc", sex:"m", pn:32, seed:"msk4",
+  bio:"Partner at North Beam Capital. We back CIS founders going global: fintech, developer tools, AI applications.",
+  tags:["Fintech","DevTools","AI"]},
+ {id:"sara", name:"Sara Haddad", role:"inv", city:"Dubai, UAE", link:"", sex:"w", pn:68, seed:"dxb9",
+  bio:"Family office, MENA. Long-horizon positions in mining infrastructure and tokenized real-world assets.",
+  tags:["Mining","RWA"]},
+ {id:"tomas", name:"Tomas Keller", role:"inv", city:"Berlin, Germany", link:"", sex:"m", pn:15, seed:"ber3",
+  bio:"Scout for two European funds. If your round is opening in the next 6 months, let's talk now.",
+  tags:["Pre-Seed","Seed"]},
+ {id:"keiko", name:"Keiko Tan", role:"inv", city:"Tokyo, Japan", link:"", sex:"w", pn:26, seed:"tokyo5",
+  bio:"Corporate VC. We look for teams bridging Japanese enterprises and web3 rails: payments, loyalty, gaming.",
+  tags:["CVC","Payments","Gaming"]},
+ {id:"artur", name:"Artur Vazgenov", role:"inv", city:"Yerevan, Armenia", link:"", sex:"m", pn:52, seed:"evn2",
+  bio:"Private investor. Mining since 2016, now diversifying into AI data-centre projects.",
+  tags:["Mining","Data centres"]},
+ {id:"olga_p", name:"Olga Pavlenko", role:"inv", city:"Almaty, Kazakhstan", link:"", sex:"w", pn:12, seed:"ala8",
+  bio:"Syndicate lead, 300+ LPs across Central Asia. We move fast on B2B SaaS with crypto revenue.",
+  tags:["Syndicate","B2B SaaS"]},
+ {id:"rashad", name:"Rashad Aliyev", role:"inv", city:"Baku, Azerbaijan", link:"", sex:"m", pn:71, seed:"baku1",
+  bio:"Family fund. Energy, mining hosting and everything that turns megawatts into cash flow.",
+  tags:["Energy","Mining"]},
+
+ /* --- people: startups --- */
+ {id:"marcus", mats:["Vaultflow deck.pdf","vaultflow.com","Product one-pager.pdf"], name:"Marcus Thorne", role:"sup", city:"London, UK", link:"vaultflow.com", sex:"m", pn:36, seed:"ldn6",
+  bio:"Vaultflow, a smart payment orchestration platform that helps SMEs automatically route transactions through the cheapest, fastest, and most reliable banking rails in real time",
+  tags:["Fintech","Payments","B2B"], more:"Live with 12 pilot customers, processing $1.4M/month. Raising Seed. Looking for an investor and two design partners in e-commerce."},
+ {id:"vsevolod", mats:["blastit.trade","x.com/Blastit_trade","Bot platform demo.pdf"], name:"Vsevolod Krasnov", role:"sup", city:"Dubai, UAE", link:"x.com/Blastit_trade", sex:"m", pn:75, seed:"dxb3",
+  bio:"Всем привет! Я запустил проект blastit.trade. Сделали уникальную платформу для создания ботов по трейдингу с настраиваемыми сотнями фильтров торговли, даже сделали крутую интеграцию для анонимного трейдинга.",
+  tags:["Trading","Bots","DeFi"]},
+ {id:"nina", mats:["Ledgerly deck.pdf","ledgerly.app"], name:"Nina Sokolova", role:"sup", city:"Belgrade, Serbia", link:"", sex:"w", pn:47, seed:"beg5",
+  bio:"Building Ledgerly — accounting automation for crypto companies. Closes your month in hours, maps every on-chain transaction to your chart of accounts.",
+  tags:["Accounting","B2B","AI"]},
+ {id:"pavel_d", name:"Pavel Denisov", role:"sup", city:"Moscow, Russia", link:"", sex:"m", pn:83, seed:"msk11",
+  bio:"At Blockchain Life right now. Let's collaborate! Founder of a white-label wallet SDK: launch a branded wallet in two weeks.",
+  tags:["Wallets","SDK"]},
+ {id:"amina", name:"Amina Yusupova", role:"sup", city:"Tashkent, Uzbekistan", link:"", sex:"w", pn:33, seed:"tas2",
+  bio:"CopperShield: hardware security modules for mining farms. We cut firmware-level attacks to zero for 9 farms in Central Asia.",
+  tags:["Security","Mining"]},
+ {id:"jorge", mats:["Repay deck.pdf","repay.work"], name:"Jorge Mendes", role:"sup", city:"Lisbon, Portugal", link:"", sex:"m", pn:64, seed:"lis4",
+  bio:"Repay: crypto payroll for remote teams. 60+ companies pay 2,000 contractors monthly. Raising bridge before Series A.",
+  tags:["Payroll","Stablecoins"]},
+ {id:"lena", mats:["GreenHash whitepaper.pdf"], name:"Lena Fischer", role:"sup", city:"Vienna, Austria", link:"", sex:"w", pn:21, seed:"vie7",
+  bio:"GreenHash tokenizes surplus hydro energy for compute. Two plants connected, 14 MW under contract.",
+  tags:["Energy","Tokenization"]},
+ {id:"timur", name:"Timur Akhmetov", role:"sup", city:"Astana, Kazakhstan", link:"", sex:"m", pn:29, seed:"ast3",
+  bio:"Founder of Qorgan — on-chain compliance toolkit for exchanges entering CIS markets. Ex-big-four auditor.",
+  tags:["Compliance","RegTech"]},
+ {id:"mei", mats:["LoopDesk demo.pdf"], name:"Mei Zhou", role:"sup", city:"Hong Kong", link:"", sex:"w", pn:79, seed:"hk8",
+  bio:"LoopDesk: AI copilots for OTC trading desks. Cuts quote time from minutes to seconds.",
+  tags:["AI","OTC","Trading"]},
+ {id:"ivan_k", name:"Ivan Klimov", role:"sup", city:"St. Petersburg, Russia", link:"", sex:"m", pn:41, seed:"spb6",
+  bio:"NodeCraft — managed validator infrastructure. 99.98% uptime across 14 networks. Looking for exchange partnerships.",
+  tags:["Infra","Staking"]},
+ {id:"viktor", name:"Viktor Hrom", role:"sup", city:"Warsaw, Poland", link:"", sex:"m", pn:19, seed:"waw2",
+  bio:"DePIN network of air-quality sensors: 4,000 devices online, token incentives for hosts. Piloting with two cities.",
+  tags:["DePIN","IoT"]},
+
+ /* --- people: looking around --- */
+ {id:"marta", name:"Marta Silva", role:"look", city:"Porto, Portugal", link:"", sex:"w", pn:55, seed:"por3",
+  bio:"Web3 recruiter. I close senior Rust and Solidity roles in 3 weeks. Here to meet founders who are hiring.",
+  tags:["Hiring","Talent"]},
+ {id:"inna", name:"Inna", role:"look", city:"Moscow, Russia", link:"", sex:"w", pn:17, seed:"msk9",
+  bio:"Event producer. I run side events and speaker dinners around major crypto conferences.",
+  tags:["Events","Community"]},
+ {id:"alexr", name:"Alexandr Rudnev", role:"look", city:"Moscow, Russia", link:"", sex:"m", pn:22, seed:"msk15",
+  bio:"Product designer, 8 years in fintech. Open to consulting and full-time in web3 products.",
+  tags:["Design","Product"]},
+ {id:"elowyn", name:"Elowyn Chan", role:"look", city:"Kuala Lumpur, Malaysia", link:"", sex:"w", pn:90, seed:"kl4",
+  bio:"Growth marketer. Ran user acquisition for two exchanges. Exploring what to build next.",
+  tags:["Growth","Marketing"]},
+ {id:"dana", name:"Dana Kim", role:"look", city:"Seoul, South Korea", link:"", sex:"w", pn:3, seed:"seoul2",
+  bio:"Journalist covering Asian crypto markets. Collecting founder stories for a podcast season.",
+  tags:["Media","Podcast"]},
+ {id:"stef", name:"Stefan Novak", role:"look", city:"Prague, Czechia", link:"", sex:"m", pn:58, seed:"prg5",
+  bio:"Solidity dev, 5 years. Contributing to two open-source projects. Happy to talk audits and gas golf.",
+  tags:["Solidity","Audits"]},
+ {id:"chloe", name:"Chloé Dubois", role:"look", city:"Paris, France", link:"", sex:"w", pn:36, seed:"par6",
+  bio:"BD freelancer for web3 brands entering Europe. 6 launches, 3 licences, zero drama.",
+  tags:["BD","Go-to-market"]},
+
+ /* --- real companies --- */
+ {id:"gmt", name:"GMT Legal", role:"co", feedHide:true, city:"Moscow, Russia", link:"gmtlegal.com", domain:"gmtlegal.com", seed:"legal1",
+  bio:"Legal support for IT, fintech and crypto projects: structuring, licensing, digital-asset regulation.",
+  tags:["Legal","Compliance"], real:true},
+ {id:"bitok", name:"BitOK", role:"co", feedHide:true, city:"Moscow, Russia", link:"", seed:"aml2",
+  bio:"Crypto compliance and portfolio tracking platform: AML checks, tax reporting, on-chain analytics.",
+  tags:["AML","Analytics"], real:true},
+ {id:"bydfi", name:"BYDFi", role:"co", feedHide:true, city:"Global", link:"bydfi.com", domain:"bydfi.com", seed:"exch3",
+  bio:"Crypto exchange with an active CIS direction and trading community projects.",
+  tags:["Exchange","CIS"], real:true},
+ {id:"evedex", name:"EVEDEX", role:"co", feedHide:true, sub:"sup", city:"Global", link:"evedex.com", domain:"evedex.com", seed:"dex4",
+  bio:"Decentralized exchange: gas-free transactions, gamified fee tiers, CEX-grade UX on DeFi rails.",
+  tags:["DEX","DeFi"], real:true},
+ {id:"mexc", name:"MEXC", role:"co", feedHide:true, city:"Global", link:"mexc.com", domain:"mexc.com", seed:"exch5",
+  bio:"Global crypto exchange. CEO spoke at Blockchain Forum 2026.",
+  tags:["Exchange"], real:true},
+ {id:"htx", name:"HTX", role:"co", feedHide:true, city:"Global", link:"htx.com", domain:"htx.com", seed:"exch6",
+  bio:"Crypto exchange. CIS business unit and P2P direction present at the forum.",
+  tags:["Exchange","P2P"], real:true},
+ {id:"intelion", name:"Intelion Data Systems", role:"co", feedHide:true, city:"Moscow, Russia", link:"intelion.ru", domain:"intelion.ru", seed:"dc7",
+  bio:"Industrial mining and data-centre infrastructure operator in Russia.",
+  tags:["Mining","Data centres"], real:true},
+ {id:"promminer", name:"Promminer", role:"co", feedHide:true, city:"Russia", link:"", seed:"mine8",
+  bio:"Industrial mining company: hosting, equipment, turnkey mining projects.",
+  tags:["Mining","Hosting"], real:true},
+ {id:"viabtc", name:"ViaBTC", role:"co", feedHide:true, city:"Global", link:"viabtc.com", domain:"viabtc.com", seed:"pool9",
+  bio:"One of the largest BTC mining pools. Business development team attends CIS events.",
+  tags:["Mining pool"], real:true},
+ {id:"web3tech", name:"Web3 Tech", role:"co", feedHide:true, city:"Moscow, Russia", link:"web3tech.ru", domain:"web3tech.ru", seed:"ent10",
+  bio:"Enterprise blockchain developer: tokenization platforms and infrastructure for corporate clients.",
+  tags:["Enterprise","Tokenization"], real:true},
+ {id:"storm", name:"Storm Trade", role:"co", feedHide:true, sub:"sup", city:"Global", link:"storm.trade", domain:"storm.trade", seed:"ton11",
+  bio:"Trading platform on TON: perpetual futures inside Telegram.",
+  tags:["TON","Trading"], real:true},
+
+ /* organizer companies: exist for chats/sponsor persona, hidden from feed (shown as sponsor ad cards) */
+ {id:"listing", name:"Listing.Help", role:"co", city:"Global", link:"listing.help", domain:"listing.help", seed:"list12", feedHide:true,
+  bio:"Listing agency for crypto exchanges. Part of the Blockchain Life ecosystem.", tags:["Listings"], real:true},
+ {id:"jets", name:"Jets Capital", role:"co", sub:"inv", city:"Global", link:"jets.capital", domain:"jets.capital", seed:"jets13", feedHide:true,
+  bio:"Investment fund focused on cryptocurrencies and digital assets. Part of the Blockchain Life ecosystem.", tags:["Fund"], real:true},
+
+ {id:"elena", name:"Elena Marchuk", role:"look", city:"Moscow, Russia", link:"", sex:"w", pn:52, seed:"law3",
+  bio:"Lawyer for crypto and fintech projects: structuring, licensing, token frameworks. 60+ projects advised.",
+  tags:["Legal","Compliance"]},
+ {id:"ravi", name:"Ravi Sharma", role:"look", city:"Mumbai, India", link:"", sex:"m", pn:5, seed:"mum2",
+  bio:"BD at a global crypto exchange. Scouting listing-ready projects and regional partners in CIS and MENA.",
+  tags:["Exchange","BD","Listings"]},
+ {id:"olzhas", name:"Olzhas Berkut", role:"look", city:"Astana, Kazakhstan", link:"", sex:"m", pn:47, seed:"ast7",
+  bio:"Head of an enterprise tokenization platform. Looking for pilots with industrial and energy assets.",
+  tags:["Tokenization","Enterprise"]},
+ {id:"wei", name:"Wei Lang", role:"look", city:"Shenzhen, China", link:"", sex:"m", pn:66, seed:"szx3",
+  bio:"Mining-pool business development. Integrations, hashrate deals, dashboards for institutional miners.",
+  tags:["Mining pool","BD"]},
+ {id:"grace", name:"Grace Osei", role:"look", city:"London, UK", link:"", sex:"w", pn:82, seed:"lon9",
+  bio:"Listings manager at a top-10 exchange. I can tell you in 10 minutes whether your token is ready.",
+  tags:["Listings","Exchange"]},
+ {id:"sofia", name:"Sofia Reyes", role:"inv", city:"Mexico City, Mexico", link:"", sex:"w", pn:31, seed:"mex4",
+  bio:"LatAm fund, $40M AUM. Stablecoin rails, remittances, on/off-ramp infrastructure.",
+  tags:["Fund","Payments","LatAm"]},
+ {id:"pierre", name:"Pierre Laurent", role:"inv", city:"Geneva, Switzerland", link:"", sex:"m", pn:60, seed:"gva2",
+  bio:"Private banker moving clients into digital assets. Interested in regulated custody and structured products.",
+  tags:["Private banking","Custody"]},
+ {id:"denis_m", mats:["Custody service deck.pdf"], name:"Denis Mirov", role:"sup", city:"Limassol, Cyprus", link:"", sex:"m", pn:90, seed:"lim5",
+  bio:"Building a qualified-custody service for funds: MPC wallets, insurance, audit trail. 14 funds onboarded.",
+  tags:["Custody","B2B"]},
+ {id:"yuki", name:"Yuki Sato", role:"look", city:"Osaka, Japan", link:"", sex:"w", pn:57, seed:"osa1",
+  bio:"Community builder. Grew two web3 communities past 100K. Open to ambassador and advocacy roles.",
+  tags:["Community","Growth"]},
+];
+
+/* sponsor ad cards in feed (real sponsors/organizers of Blockchain Forum 2026) */
+const SPONSOR_CARDS = [
+ {id:"sp_listing", name:"Listing.Help", tier:"Diamond Sponsor", ctaText:"Get listed", domain:"listing.help",
+  tagline:"Get listed on top crypto exchanges", theme:"blue"},
+ {id:"sp_jets", name:"Jets Capital", tier:"Gold Sponsor", ctaText:"Pitch your project", domain:"jets.capital",
+  tagline:"Investment fund of the Blockchain Life ecosystem", theme:"navy"},
+ {id:"sp_bingx", name:"BingX", tier:"Platinum Sponsor", ctaText:"Meet us at booth B-12", domain:"bingx.com",
+  tagline:"Trade smarter. Meet our regional team at the forum", theme:"teal"},
+ {id:"sp_coinkit", name:"CoinKit", tier:"Gold Sponsor", ctaText:"Book a free call", domain:"",
+  tagline:"AML monitoring and analysis of crypto transactions", theme:"violet"},
+ {id:"sp_a7a5", name:"A7A5", tier:"Gold Sponsor", ctaText:"Learn more", domain:"",
+  tagline:"The leading non-USD stablecoin", theme:"green"},
+ {id:"sp_altyn", name:"Altyn Wallet", tier:"Silver Sponsor", ctaText:"Get a demo", domain:"",
+  tagline:"Cross-border payments when SWIFT/SEPA rails are unavailable", theme:"goldth"},
+ {id:"sp_dimmar", name:"DIMMAR Exchange", tier:"Silver Sponsor", ctaText:"Open an account", domain:"",
+  tagline:"Crypto exchange building the crypto-bank model", theme:"red"},
+ {id:"sp_8blocks", name:"8Blocks", tier:"Silver Sponsor", ctaText:"Get the market report", domain:"",
+  tagline:"Why some tokens grow when the market falls — market insights", theme:"orange"},
+ {id:"sp_coinw", name:"CoinW", tier:"Diamond Sponsor", ctaText:"Meet us at booth C-08", domain:"coinw.com",
+  tagline:"Global crypto exchange — meet the team at the forum", theme:"blue"},
+ {id:"sp_alfa", name:"Alfa-Bank", tier:"Platinum Sponsor", ctaText:"Book a meeting", domain:"alfabank.ru",
+  tagline:"AI Future Forum partner: AI in banking and beyond", theme:"red"},
+];
+
+/* incoming requests */
+const REQUESTS = [
+ {pid:"pavel_d", text:"At Blockchain Life right now. Let's collaborate!"},
+ {pid:"ravi",  text:"Looking for regional partners and community leads in CIS."},
+ {pid:"nina",   text:"Saw your profile — we automate accounting for companies like yours."},
+ {pid:"sara",   text:"Interested in mining-adjacent AI infrastructure. Open to a call this week."},
+ {pid:"olzhas", text:"Looking for pilots: tokenization for industrial assets."},
+ {pid:"tomas", text:"Your round timing fits our scouting window. Quick chat?"},
+];
+
+/* outgoing requests: status 'sent' (не принял) | 'noreply' (принял, но не ответил) */
+const OUTGOING = [
+ {pid:"keiko", text:"We build payment orchestration for SMEs — relevant for your enterprise focus?", status:"sent"},
+ {pid:"wei", text:"Exploring a mining-pool integration for our dashboard. Open to talk?", status:"noreply"},
+ {pid:"grace", text:"Listing enquiry: token live since Q1, volumes growing. Who is the right contact?", status:"sent"},
+ {pid:"olga_p", text:"B2B SaaS with crypto revenue — sounds like us. 15 minutes at the forum?", status:"noreply"},
+ {pid:"stef", text:"Looking for an auditor for our contracts before mainnet.", status:"sent"},
+];
+
+const CHATS = [
+ {pid:"liu", unread:0, autoReply:["Got it — send the deck here or to fund@scryptinc.com.","We review within a week. If it fits, my partner joins the next call."],
+  msgs:[
+   {f:1,t:"Hi! Thanks for connecting. Tell me in three lines what you are building."},
+   {f:0,t:"Payment orchestration for SMEs: we route transactions to the cheapest reliable rail in real time. $1.4M/month volume, 12 pilots."},
+   {f:1,t:"Nice traction for this stage. Do you have a deck?"}]},
+ {pid:"inna", unread:1, msgs:[
+   {f:0,t:"Инна, добрый день! Подскажите, где встречаемся с фондом?"},
+   {f:1,t:"Добрый! Второй этаж, за стендом майнинг-зоны."},
+   {f:1,t:"Забронировала переговорку на втором этаже на 15:30, подходит?"}]},
+ {pid:"ainie", unread:1, msgs:[
+   {f:1,t:"Impressive demo yesterday. We discussed internally."},
+   {f:1,t:"We are ready to invest 50k $. What documents do you need from us?"}]},
+ {pid:"elowyn", unread:0, msgs:[
+   {f:1,t:"Tried the beta. Onboarding is smooth but the second screen lost me."},
+   {f:0,t:"Which part exactly?"},
+   {f:1,t:"I can't see the difference between the two plans."},
+   {f:0,t:"Fair. We'll merge them into one with a toggle. Thanks!"}]},
+ {pid:"alexr", unread:0, msgs:[
+   {f:1,t:"Отличная встреча сегодня! Смотрю ваши макеты."},
+   {f:0,t:"Идешь на after-party? 🍉"},
+   {f:1,t:"Да, буду после 22:00. Обсудим дизайн-систему там?"}]},
+ {pid:"elena", unread:0, msgs:[
+   {f:0,t:"Hi! We are choosing a jurisdiction for the token entity. Can you advise?"},
+   {f:1,t:"Yes — this is our core work. Which markets do you target first?"},
+   {f:0,t:"CIS + MENA, exchange listing within 6 months."},
+   {f:1,t:"Then let's look at two structures. I'll bring a comparison to our meeting at the booth."}]},
+ {pid:"marcus", unread:0, msgs:[
+   {f:1,t:"Hey! Fellow founder here. Your bot platform looks close to what our merchants ask for."},
+   {f:0,t:"Interesting. Integration or partnership?"},
+   {f:1,t:"Both possible. 15 minutes near the main stage at 13:00?"}]},
+ {pid:"jets", unread:1, msgs:[
+   {f:1,t:"Thanks for the request. Our analyst will meet you at the forum."},
+   {f:1,t:"Slot available: day 2, 12:30, investor lounge. Confirm?"}]},
+ {pid:"dana", unread:0, msgs:[
+   {f:1,t:"Recording founder interviews for the podcast, 20 min each. Interested?"},
+   {f:0,t:"Sure. Day 1 after 16:00 works."},
+   {f:1,t:"Booked. Booth C-14, bring your loudest story."}]},
+ {pid:"marta", unread:0, msgs:[
+   {f:1,t:"You mentioned hiring a senior Solidity dev. I have two candidates at the forum today."},
+   {f:0,t:"Great, send profiles here."}]},
+];
+
+const HIDDEN_COUNT = 13;
+
+const PERSONAS = {
+ inv: {pid:"daniil", label:"Investor"},
+ sup: {pid:"vsevolod", label:"Startup"},
+ look:{pid:"marta", label:"Looking around"},
+ spon:{pid:"listing", name:"Listing.Help", label:"Sponsor", tier:"Diamond Sponsor"},
+};
+/* default text of an outgoing request per viewing role */
+const OUT_TEXT = {
+ inv:"Interested in your project. 15 minutes at the forum?",
+ sup:"Raising Seed — would love to show you a 3-minute demo.",
+ look:"Would love to connect at the forum.",
+ spon:"Let's discuss a partnership at our booth.",
+};
+
+const METRICS = [
+ {l:"My profile views", v:"2 574", d:"-995 (-27.9%)", neg:1},
+ {l:"Card opens",       v:"1 208", d:"-214 (-15.1%)", neg:1},
+ {l:"Link clicks",      v:"340",   d:"+41 (+13.7%)",  neg:0},
+ {l:"Calls booked",     v:"26",    d:"+6 (+30%)",     neg:0},
+ {l:"New chats",        v:"57",    d:"-6 (-3%)",      neg:1},
+ {l:"Meetings",         v:"10",    d:"+2 (+20%)",     neg:0},
+];
+
+</script>
+
+<script>
+/* ==== I18N ==== */
+const I18N = {
+ en:{connections:"Connections", incoming:"Incoming requests", outgoing:"Outgoing requests",
+     analytics:"Analytics", profile:"Profile", hidden:"Hidden", unmatch:"Unmatch", wemet:"We Met", online:"online",
+     msg_ph:"Message…", feed_end:"You've seen everyone nearby",
+     feed_end_sub:"New participants appear closer to the forum dates.", restart:"Show cards again",
+     picker_kick:"Prototype", picker_h:"Choose a role to explore the app",
+     picker_sub:"This screen is technical: it switches the demo persona. In the real app the role is set once at sign-up.",
+     r_inv:"Investor", r_inv_d:"Browse startups, get pitched, book meetings",
+     r_sup:"Startup", r_sup_d:"Find investors, partners and first clients",
+     r_look:"Looking around", r_look_d:"Jobs, partnerships, people worth meeting",
+     r_spon:"Sponsor", r_spon_d:"Ad cards in the feed and the analytics cabinet",
+     key_metrics:"Key metrics", period:"May 11 – May 17", lang:"Language", switch_role:"Switch demo role",
+     edit:"Edit profile", notif:"Notifications", my_link:"My links", meeting_rec:"Meeting recorded ✓",
+     removed:"Connection removed", accepted:"Request accepted — chat opened", demo:"Not in this prototype",
+     more:"More to know", connected:"Request sent ✓", book:"Book a free call", connect:"Connect", skip:"Skip", skipped:"Skipped",
+     call_booked:"Call request sent to the sponsor ✓", sp_done:"Request sent to the sponsor ✓", mats:"Materials", accept:"Accept", sub_unread:"{n} unread", sub_req:"{n} requests", days:["7 days","28 days","60 days","365 days"], you:"You: ",
+     b_sent:"Not accepted yet", b_noreply:"No reply yet", inc_empty:"No incoming requests yet.",
+     out_empty:"No outgoing requests. Swipe right in the feed to send one."},
+ ru:{connections:"Контакты", incoming:"Входящие запросы", outgoing:"Исходящие запросы",
+     analytics:"Аналитика", profile:"Профиль", hidden:"Скрытые", unmatch:"Разорвать", wemet:"Встретились", online:"в сети",
+     msg_ph:"Сообщение…", feed_end:"Вы просмотрели всех участников рядом",
+     feed_end_sub:"Новые участники появляются ближе к датам форума.", restart:"Показать карточки снова",
+     picker_kick:"Прототип", picker_h:"Выберите роль для просмотра",
+     picker_sub:"Экран технический: переключает демо-персону. В реальном приложении роль задаётся один раз при регистрации.",
+     r_inv:"Инвестор", r_inv_d:"Стартапы, питчи, встречи",
+     r_sup:"Стартап", r_sup_d:"Инвесторы, партнёры, первые клиенты",
+     r_look:"Осматриваюсь", r_look_d:"Работа, партнёрства, полезные знакомства",
+     r_spon:"Спонсор", r_spon_d:"Карточки в ленте и кабинет аналитики",
+     key_metrics:"Ключевые метрики", period:"11 – 17 мая", lang:"Язык", switch_role:"Сменить демо-роль",
+     edit:"Редактировать профиль", notif:"Уведомления", my_link:"Мои ссылки", meeting_rec:"Встреча записана ✓",
+     removed:"Контакт удалён", accepted:"Заявка принята — чат открыт", demo:"Не входит в прототип",
+     more:"Подробнее", connected:"Запрос отправлен ✓", book:"Записаться на звонок", connect:"Связаться", skip:"Пропустить", skipped:"Пропущено",
+     call_booked:"Заявка на звонок отправлена ✓", sp_done:"Заявка отправлена спонсору ✓", mats:"Материалы", accept:"Принять", sub_unread:"Непрочитанных: {n}", sub_req:"Заявок: {n}", days:["7 дней","28 дней","60 дней","365 дней"], you:"Вы: ",
+     b_sent:"Пока не принял", b_noreply:"Пока не ответил", inc_empty:"Входящих запросов пока нет.",
+     out_empty:"Исходящих запросов нет. Свайпните вправо в ленте, чтобы отправить."},
+};
+const t = k => (I18N[S.lang][k]!==undefined ? I18N[S.lang][k] : k);
+
+/* ==== STATE ==== */
+const S = {
+ lang:"en", role:null, screen:"picker", chatId:null, backTo:"feed",
+ feedIdx:0, feedOrder:[], detailPid:null, detailBack:"feed", per:0,
+ chats: CHATS.map(c=>({...c, msgs:[...c.msgs]})),
+ incoming:[...REQUESTS],
+ outgoing:[...OUTGOING],
+ dismissedSponsors:new Set(),
+};
+const roleLabel = r => ({inv:t("r_inv"),sup:t("r_sup"),look:t("r_look"),co:"Company",spon:t("r_spon")})[r]||r;
+const pById = id => PROFILES.find(p=>p.id===id);
+const initials = n => n.split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+const gIdx = {}; PROFILES.forEach((p,i)=>gIdx[p.id]=i);
+
+/* avatar html: photo (portrait or logo) with gradient/initials fallback */
+function avatar(p, cls=""){
+ const img = p.role==="co" ? logoUrl(p) : portrait(p);
+ const isLogo = p.role==="co" && img;
+ return `<div class="pav ${cls} ${isLogo?"logo":""}" style="background:${grad(gIdx[p.id]!==undefined?gIdx[p.id]:3)}">${initials(p.name)}${img?`<img src="${img}" alt="" loading="lazy" onerror="this.remove()">`:""}</div>`;
+}
+
+/* ==== ICONS ==== */
+const IC = {
+ spark:'<path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/><path d="M18.5 15l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>',
+ cards:'<rect x="4" y="3.5" width="13" height="17" rx="2.5"/><path d="M20 7v12a2.2 2.2 0 01-2.2 2.2H7.5"/>',
+ inbox:'<path d="M12 3.5v9.5M8.5 9.5l3.5 3.5 3.5-3.5"/><path d="M4 15.5v2.5a2 2 0 002 2h12a2 2 0 002-2v-2.5"/>',
+ outbox:'<path d="M12 13V3.5M8.5 7l3.5-3.5L15.5 7"/><path d="M4 15.5v2.5a2 2 0 002 2h12a2 2 0 002-2v-2.5"/>',
+ chat:'<path d="M4 6h16v10H9l-5 4z"/>',
+ heart:'<path d="M12 20s-7.5-4.8-9.3-9A5.2 5.2 0 0112 6.4 5.2 5.2 0 0121.3 11c-1.8 4.2-9.3 9-9.3 9z"/>',
+ user:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0114 0"/>',
+ bars:'<path d="M5 20V10M12 20V4M19 20v-8"/>',
+ pin:'<path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ check:'<path d="M5 13l4.5 4.5L19 8"/>',
+ back:'<path d="M15 5l-7 7 7 7"/>',
+ send:'<path d="M4 12l16-7-6 16-2.5-6.5z"/>',
+ chevD:'<path d="M6 9l6 6 6-6"/>',
+ chevR:'<path d="M9 6l6 6-6 6"/>',
+ dollar:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.7a1.8 1.8 0 010 3.6H10a1.8 1.8 0 000 3.6h4"/>',
+ case:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/>',
+ starSm:'<path d="M12 3l2.7 5.7 6.3.8-4.6 4.3 1.2 6.2L12 17l-5.6 3 1.2-6.2L3 9.5l6.3-.8z"/>',
+ met:'<circle cx="9" cy="8" r="3"/><circle cx="16.5" cy="9" r="2.4"/><path d="M3.5 19a5.5 5.5 0 0111 0M13.5 19a4.5 4.5 0 017 0"/>',
+ down:'<circle cx="12" cy="12" r="9"/><path d="M12 8v7M9 12.5l3 3 3-3"/>',
+ up:'<circle cx="12" cy="12" r="9"/><path d="M12 16V9M9 11.5l3-3 3 3"/>',
+ lang:'<circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3a15 15 0 010 18"/>',
+ bell:'<path d="M6 16v-5a6 6 0 0112 0v5l1.5 2.5h-15z"/><path d="M10 19a2 2 0 004 0"/>',
+ pencil:'<path d="M4 20l1-4L16 5l3 3L8 19z"/>',
+ link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 10-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 105.7 5.7l1-1"/>',
+ shuffle:'<path d="M4 7h4l8 10h4M20 7h-4l-2 2.5M4 17h4l2-2.5M17 4l3 3-3 3M17 14l3 3-3 3"/>',
+ doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 15.5h6"/>',
+ ext:'<path d="M14 5h5v5M19 5l-8 8"/><path d="M19 13v6H5V5h6"/>',
+};
+const svg = (name, cls="") => `<svg class="${cls}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${IC[name]}</svg>`;
+const roleIcon = r => ({inv:"dollar",sup:"case",look:"search",co:"case",spon:"starSm"})[r]||"user";
+
+let toastT;
+function toast(msg){
+ const el=document.getElementById("toast");
+ el.textContent=msg; el.classList.add("show");
+ clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),1900);
+}
+
+/* ==== FEED ORDER ==== */
+function buildFeed(){
+ const meId = (PERSONAS[S.role]||{}).pid;
+ const ids=PROFILES.filter(p=>!p.feedHide && p.id!==meId).map(p=>p.id);
+ const inv=ids.filter(i=>pById(i).role==="inv"), sup=ids.filter(i=>pById(i).role==="sup"),
+       look=ids.filter(i=>pById(i).role==="look"), co=ids.filter(i=>pById(i).role==="co");
+ let order=[];
+ const src = S.role==="inv" ? [sup,co,look,inv] : S.role==="sup" ? [inv,co,sup,look] : [co,sup,inv,look];
+ const max=Math.max(...src.map(a=>a.length));
+ for(let i=0;i<max;i++) src.forEach(a=>{ if(a[i]) order.push({type:"p",id:a[i]}); });
+ /* взвешенная ротация спонсоров: вес по уровню */
+ const W={Diamond:4,Platinum:3,Gold:2,Silver:1};
+ const slots=[];
+ SPONSOR_CARDS.forEach(s=>{
+   const w=W[Object.keys(W).find(k=>s.tier.startsWith(k))||"Gold"];
+   for(let k=1;k<=w;k++) slots.push({id:s.id,pos:k/w});
+ });
+ slots.sort((a,b)=>a.pos-b.pos);
+ const rotation=slots.map(x=>x.id);
+ let out=[], si=0;
+ order.forEach((o,i)=>{ out.push(o); if((i+1)%4===0){out.push({type:"s",id:rotation[si%rotation.length]}); si++;} });
+ const seen=new Set(out.filter(o=>o.type==="s").map(o=>o.id));
+ SPONSOR_CARDS.forEach(s=>{ if(!seen.has(s.id)) out.push({type:"s",id:s.id}); });
+ S.feedOrder=out; S.feedIdx=0;
+}
+
+/* ==== RENDER ROOT ==== */
+function render(){
+ const v=document.getElementById("view"), tb=document.getElementById("tabs");
+ if(S.screen==="picker"){ v.innerHTML=rPicker(); tb.innerHTML=""; bindPicker(); return; }
+ v.innerHTML = ({feed:rFeed, incoming:rIncoming, outgoing:rOutgoing, connections:rConnections, chat:rChat,
+                 analytics:rAnalytics, me:rMe, detail:rDetail})[S.screen]();
+ tb.innerHTML = rTabs();
+ bindCommon();
+ const _b=({feed:bindFeed, incoming:bindIncoming, outgoing:bindOutgoing, connections:bindConnections, chat:bindChat,
+   analytics:bindAnalytics, me:bindMe, detail:bindDetail})[S.screen]; if(_b) _b();
+}
+
+/* ==== TABS ==== */
+function unreadTotal(){ return S.chats.reduce((s,c)=>s+c.unread,0); }
+function rTabs(){
+ const spon=S.role==="spon";
+ const tabs = spon
+  ? [["feed","cards"],["analytics","bars"],["connections","chat"],["incoming","inbox"],["me","user"]]
+  : [["feed","cards"],["connections","chat"],["incoming","inbox"],["outgoing","outbox"],["me","user"]];
+ return `<div class="tabbar">`+tabs.map(([id,ic])=>{
+   const on=(S.screen===id)||(S.screen==="chat"&&id==="connections")||(S.screen==="detail"&&id===({feed:"feed",incoming:"incoming",outgoing:"outgoing",connections:"connections"}[S.detailBack]||"feed"));
+   let bdg="";
+   if(id==="connections"&&unreadTotal()) bdg=`<span class="bdg"></span>`;
+   if(id==="incoming"&&S.incoming.length) bdg=`<span class="bdg"></span>`;
+   return `<button class="tab ${on?"on":""}" data-tab="${id}">${svg(ic)}${bdg}</button>`;
+ }).join("")+`</div>`;
+}
+function bindCommon(){
+ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{ S.screen=b.dataset.tab; render(); });
+}
+
+/* ==== PICKER ==== */
+function rPicker(){
+ const R=[["inv","r_inv","r_inv_d","#2F6BFF","dollar"],["sup","r_sup","r_sup_d","#22C55E","case"],
+          ["look","r_look","r_look_d","#9B51E0","search"],["spon","r_spon","r_spon_d","#B8860B","starSm"]];
+ return `<div class="picker">
+   <div class="kick">${t("picker_kick")} · Blockchain Life</div>
+   <h1>${t("picker_h")}</h1>
+   <div class="sub">${t("picker_sub")}</div>
+   ${R.map(([id,l,d,c,ic])=>`
+     <button class="rolebtn" data-role="${id}">
+       <span class="ric" style="background:${c}">${svg(ic)}</span>
+       <span><b>${t(l)}</b><small>${t(d)}</small></span>
+     </button>`).join("")}
+   <div class="note">EN / RU: Profile → ${t("lang")}.</div>
+ </div>`;
+}
+function bindPicker(){
+ document.querySelectorAll(".rolebtn").forEach(b=>b.onclick=()=>{
+   S.role=b.dataset.role; buildFeed(); S.screen="feed"; render();
+ });
+}
+
+/* ==== FEED ==== */
+function rProfileCard(p, full=false){
+ const sub=p.role==="co"?(p.sub||"co"):p.role;
+ const roleTxt=p.role==="co"?"Company":roleLabel(p.role);
+ return `
+  <div class="photo"><img src="${coverUrl(p)}" alt="" loading="lazy" onerror="this.remove()"></div>
+  ${avatar(p,"ava-big"+(p.role==="co"?" sq":""))}
+  <div class="shade"></div>
+  <div class="top">
+    <span class="rolelb">${roleTxt.split("").join("\u2009")}</span>
+    ${p.link?`<span class="chip linkc">${p.link}</span>`:""}
+  </div>
+  <div class="info">
+    <div class="name">${p.name}</div>
+    <div class="loc">${p.city}</div>
+    <div class="bio" ${full?'style="-webkit-line-clamp:unset"':""}>${p.bio}</div>
+    <div class="tagsA">${p.tags.map(x=>"#"+x).join("&nbsp;&nbsp;")}</div>
+    ${full?"":`<div class="factions">
+      <button class="bbar skipb" data-act="nope">${t("skip")}</button>
+      <button class="bbar connb" data-act="like">${t("connect")}</button>
+    </div>`}
+  </div>
+  ${full?"":`<div class="stamp like">CONNECT</div><div class="stamp nope">SKIP</div>`}`;
+}
+function rSponsorFeed(s){
+ const TIER={Diamond:{bg:"diamond",cls:"dia",chip:"linear-gradient(135deg,#3D63D8,#7A5CFF)"},
+             Platinum:{bg:"platinum",cls:"plat",chip:"linear-gradient(135deg,#9FB0C8,#5A6B85)"},
+             Gold:{bg:"goldgrad",cls:"gold",chip:"linear-gradient(135deg,#F2B93B,#A66E08)"},
+             Silver:{bg:"silverg",cls:"silv",chip:"linear-gradient(135deg,#A8B0BC,#5F6773)"}};
+ const tk=Object.keys(TIER).find(k=>s.tier.startsWith(k))||"Gold", T=TIER[tk];
+ const logo=s.domain?`<img src="https://www.google.com/s2/favicons?domain=${s.domain}&sz=128" alt="" style="width:100%;height:100%;object-fit:contain;padding:12%" onerror="this.remove()">`:"";
+ return `
+  <div class="photo ${T.bg}"></div>
+  <div class="sp-chipw">
+    <span class="logo pav" style="background:${T.chip};border-radius:9px">${logo||initials(s.name)}</span>
+    <span><span class="n">${s.name}</span><br><span class="s ${T.cls}">${s.tier.toUpperCase()}</span></span>
+  </div>
+  <button class="sp-x" data-act="spclose">${svg("x")}</button>
+  <div class="glass"><div class="wm">${s.name}</div><div class="tg">${s.tagline}</div></div>
+  <button class="sp-cta" data-act="spcta">${s.ctaText}</button>`;
+}
+function currentFeedItems(){
+ const items=[];
+ for(let i=S.feedIdx;i<S.feedOrder.length && items.length<2;i++){
+   const o=S.feedOrder[i];
+   if(o.type==="s"&&S.dismissedSponsors.has(o.id)) continue;
+   items.push(o);
+ }
+ return items;
+}
+function rFeed(){
+ const items=currentFeedItems();
+ if(!items.length){
+   return `<div class="feedwrap"><div class="fempty">
+     <div class="big">🤝</div><b>${t("feed_end")}</b><span style="font-size:12.5px">${t("feed_end_sub")}</span>
+     <button class="linkbtn" data-act="restart">${t("restart")}</button></div></div>`;
+ }
+ return `<div class="feedwrap"><div class="stack">`+
+   items.slice().reverse().map((o,ri)=>{
+     const topmost = ri===items.length-1;
+     const inner = o.type==="s" ? rSponsorFeed(SPONSOR_CARDS.find(x=>x.id===o.id)) : rProfileCard(pById(o.id));
+     return `<div class="fcard ${o.type==="s"?"spcard":""} ${topmost?"topmost":"under"}" data-id="${o.id}" data-type="${o.type}">${inner}</div>`;
+   }).join("")+`</div></div>`;
+}
+function advanceFeed(){
+ do{ S.feedIdx++; } while(S.feedOrder[S.feedIdx] && S.feedOrder[S.feedIdx].type==="s" && S.dismissedSponsors.has(S.feedOrder[S.feedIdx].id));
+ render();
+}
+function flyOut(card, dir, cb){
+ card.style.transition="transform .32s ease-in, opacity .32s";
+ card.style.transform=`translateX(${dir*560}px) rotate(${dir*22}deg)`;
+ card.style.opacity="0";
+ setTimeout(cb,300);
+}
+/* direction always follows the action: like → right, skip → left */
+function onDecision(like){
+ const card=document.querySelector(".fcard.topmost");
+ if(!card) return;
+ const o=S.feedOrder[S.feedIdx];
+ flyOut(card, like?1:-1, ()=>{
+   if(like && o.type==="p"){
+     if(!S.outgoing.some(r=>r.pid===o.id))
+       S.outgoing.unshift({pid:o.id, text:OUT_TEXT[S.role]||OUT_TEXT.look, status:"sent"});
+     toast(t("connected"));
+   }
+   advanceFeed();
+ });
+}
+function bindFeed(){
+ const _rs=document.querySelector('[data-act="restart"]'); if(_rs) _rs.addEventListener("click",()=>{ buildFeed(); S.dismissedSponsors.clear(); render(); });
+ const card=document.querySelector(".fcard.topmost");
+ if(!card) return;
+ const _n=card.querySelector('[data-act="nope"]'); if(_n) _n.addEventListener("click",e=>{e.stopPropagation();onDecision(false)});
+ const _l=card.querySelector('[data-act="like"]'); if(_l) _l.addEventListener("click",e=>{e.stopPropagation();onDecision(true)});
+ const _sc=card.querySelector('[data-act="spclose"]'); if(_sc) _sc.addEventListener("click",e=>{
+   e.stopPropagation(); S.dismissedSponsors.add(card.dataset.id); advanceFeed();
+ });
+ const _sp=card.querySelector('[data-act="spcta"]'); if(_sp) _sp.addEventListener("click",e=>{
+   e.stopPropagation();
+   const s=SPONSOR_CARDS.find(x=>x.id===card.dataset.id);
+   toast(t("sp_done"));
+   S.dismissedSponsors.add(s.id); advanceFeed();
+ });
+ let moved=false;
+ card.addEventListener("click",e=>{
+   if(moved || e.target.closest("button")) return;
+   if(card.dataset.type==="p"){ S.detailPid=card.dataset.id; S.detailBack="feed"; S.screen="detail"; render(); }
+ });
+ let sx=0, sy=0, dx=0, dragging=false;
+ const like=card.querySelector(".stamp.like"), nope=card.querySelector(".stamp.nope");
+ const move=e=>{
+   if(!dragging) return;
+   dx=e.clientX-sx; const dy=e.clientY-sy;
+   if(Math.abs(dx)>6) moved=true;
+   card.style.transform=`translate(${dx}px,${dy*.25}px) rotate(${dx*.05}deg)`;
+   const op=Math.min(Math.abs(dx)/90,1);
+   if(like&&nope){ like.style.opacity=dx>0?op:0; nope.style.opacity=dx<0?op:0; }
+ };
+ const cleanup=()=>{
+   window.removeEventListener("pointermove",move);
+   window.removeEventListener("pointerup",end);
+   window.removeEventListener("pointercancel",end);
+   window.removeEventListener("blur",end);
+ };
+ const end=()=>{
+   if(!dragging) return; dragging=false; cleanup();
+   if(Math.abs(dx)>110){
+     const isLike=dx>0;
+     if(card.dataset.type==="s"){ S.dismissedSponsors.add(card.dataset.id); flyOut(card,isLike?1:-1,advanceFeed); }
+     else onDecision(isLike);
+   }else{
+     card.style.transition="transform .25s"; card.style.transform="";
+     if(like&&nope){like.style.opacity=0;nope.style.opacity=0;}
+   }
+   dx=0;
+ };
+ card.addEventListener("pointerdown",e=>{
+   if(e.target.closest("button")) return;
+   dragging=true; moved=false; sx=e.clientX; sy=e.clientY;
+   try{ card.setPointerCapture(e.pointerId); }catch(_){}
+   card.style.transition="none";
+   window.addEventListener("pointermove",move);
+   window.addEventListener("pointerup",end);
+   window.addEventListener("pointercancel",end);
+   window.addEventListener("blur",end);
+ });
+ card.addEventListener("lostpointercapture",end);
+}
+
+/* ==== DETAIL ==== */
+function rDetail(){
+ const p=pById(S.detailPid);
+ return `<div class="detail">
+   <div class="hero">
+     <button class="backbtn" data-act="back">${svg("back")}</button>
+     ${rProfileCard(p,true)}
+   </div>
+   ${p.more?`<div class="sect"><h4>${t("more")}</h4><p>${p.more}</p></div>`:""}
+   ${(()=>{const m=[...(p.mats||[])];
+     if(!m.length && p.role==="sup") m.push("Pitch deck.pdf");
+     if(!m.length && p.role==="inv") m.push("Fund one-pager.pdf");
+     if(p.link&&!m.includes(p.link)) m.push(p.link);
+     return m.length?`<div class="sect"><h4>${t("mats")}</h4>${m.map(x=>{
+       const isDoc=/\.(pdf|docx?|pptx?)$/i.test(x);
+       return `<div class="mrow" data-act="mat"><span class="mic">${svg(isDoc?"doc":"globe")}</span><span class="ml">${x}</span><span class="mx">${svg("ext")}</span></div>`;
+     }).join("")}</div>`:"";})()}
+   <div class="sect">
+     <div class="row">${svg(roleIcon(p.role==="co"?(p.sub||"co"):p.role))}<span>${p.role==="co"?"Company":roleLabel(p.role)}</span></div>
+     ${p.link?`<div class="row">${svg("globe")}<span>${p.link}</span></div>`:""}
+     <div class="row">${svg("pin")}<span>${p.city}</span></div>
+   </div>
+   <div class="dactions">
+     <button class="dskip" data-act="dskip">${t("skip")}</button>
+     <button class="dprim" data-act="dconnect">${t("connect")}</button>
+   </div>
+ </div>`;
+}
+function bindDetail(){
+ document.querySelector('[data-act="back"]').onclick=()=>{ S.screen=S.detailBack; render(); };
+ document.querySelectorAll('[data-act="mat"]').forEach(b=>b.onclick=()=>toast(t("demo")));
+ document.querySelector('[data-act="dskip"]').onclick=()=>{
+   const p=pById(S.detailPid);
+   if(S.detailBack==="feed" && (S.feedOrder[S.feedIdx]||{}).id===p.id){ S.screen="feed"; render(); onDecision(false); }
+   else{ toast(t("skipped")); S.screen=S.detailBack; render(); }
+ };
+ document.querySelector('[data-act="dconnect"]').onclick=()=>{
+   const p=pById(S.detailPid);
+   if(!S.outgoing.some(r=>r.pid===p.id))
+     S.outgoing.unshift({pid:p.id, text:OUT_TEXT[S.role]||OUT_TEXT.look, status:"sent"});
+   toast(t("connected"));
+   if(S.detailBack==="feed" && (S.feedOrder[S.feedIdx]||{}).id===p.id){ S.screen="feed"; render(); onDecision(true); }
+   else { S.screen=S.detailBack; render(); }
+ };
+}
+
+/* ==== INCOMING ==== */
+function rIncoming(){
+ const rows=S.incoming.map((r,i)=>{
+   const p=pById(r.pid);
+   return `<div class="citem"><div class="crow" data-i="${i}">
+     <span class="avwrap">${avatar(p,"av")}</span>
+     <div class="t"><div class="n">${p.name}</div><div class="m">${r.text}</div></div>
+     <button class="accbtn" data-i="${i}">${t("accept")}</button>
+   </div></div>`;
+ }).join("");
+ return `<div class="ph1">${t("incoming")}</div><div class="ph2">${t("sub_req").replace("{n}",S.incoming.length)}</div>
+  <div class="connwrap">${rows||`<div class="emptylist">${t("inc_empty")}</div>`}</div>`;
+}
+function bindIncoming(){
+ document.querySelectorAll(".accbtn").forEach(b=>b.onclick=e=>{
+   e.stopPropagation();
+   const r=S.incoming.splice(+b.dataset.i,1)[0];
+   let chat=S.chats.find(c=>c.pid===r.pid);
+   if(!chat){ chat={pid:r.pid,unread:0,msgs:[{f:1,t:r.text}]}; S.chats.unshift(chat); }
+   toast(t("accepted"));
+   S.chatId=r.pid; S.backTo="connections"; S.screen="chat"; render();
+ });
+ document.querySelectorAll(".crow").forEach(c=>c.onclick=()=>{
+   S.detailPid=S.incoming[+c.dataset.i].pid; S.detailBack="incoming"; S.screen="detail"; render();
+ });
+}
+
+/* ==== OUTGOING ==== */
+function rOutgoing(){
+ const rows=S.outgoing.map((r,i)=>{
+   const p=pById(r.pid);
+   return `<div class="citem"><div class="crow" data-i="${i}">
+     <span class="avwrap">${avatar(p,"av")}</span>
+     <div class="t"><div class="n">${p.name}</div><div class="m">${t("you")}${r.text}</div></div>
+     <div class="meta"><span class="pill ${r.status}">${t(r.status==="sent"?"b_sent":"b_noreply")}</span></div>
+   </div></div>`;
+ }).join("");
+ return `<div class="ph1">${t("outgoing")}</div><div class="ph2">${t("sub_req").replace("{n}",S.outgoing.length)}</div>
+  <div class="connwrap">${rows||`<div class="emptylist">${t("out_empty")}</div>`}</div>`;
+}
+function bindOutgoing(){
+ document.querySelectorAll(".crow").forEach(c=>c.onclick=()=>{
+   S.detailPid=S.outgoing[+c.dataset.i].pid; S.detailBack="outgoing"; S.screen="detail"; render();
+ });
+}
+
+/* ==== CONNECTIONS ==== */
+const TIMES=["12:40","11:05","Yesterday","Yesterday","Tue","Tue","Mon","Mon","Sun","Sat"];
+function rConnections(){
+ const stories=["marcus","liu","elena","jets"].map((id,i)=>{
+   const p=pById(id);
+   return `<div class="story" data-pid="${id}"><span class="av ${i%2?"":"on2"}" style="display:block">${avatar(p,"av")}</span><small>${p.name.split(" ")[0]}</small></div>`;
+ }).join("");
+ const rows=S.chats.map((c,i)=>{
+   const p=pById(c.pid);
+   const last=c.msgs[c.msgs.length-1];
+   const preview=(last.f===0?t("you"):"")+last.t;
+   return `<div class="citem" data-pid="${c.pid}">
+     <div class="cacts">
+       <button class="cact un" data-a="un">${svg("x")}${t("unmatch")}</button>
+       <button class="cact met" data-a="met">${svg("met")}${t("wemet")}</button>
+     </div>
+     <div class="crow">
+       <span class="avwrap">${avatar(p,"av")}${i<3?'<span class="dot"></span>':""}</span>
+       <div class="t"><div class="n">${p.name}</div><div class="m ${c.unread?"unread":""}">${preview}</div></div>
+       <div class="meta"><div class="tm">${TIMES[i%TIMES.length]}</div>${c.unread?`<div class="ub"></div>`:""}</div>
+     </div>
+   </div>`;
+ }).join("");
+ return `<div class="ph1">${t("connections")}</div><div class="ph2">${t("sub_unread").replace("{n}",unreadTotal())}</div>
+  <div class="connwrap">
+   <div class="stories">${stories}</div>
+   ${rows}
+   <div class="hiddenrow" data-act="hidden"><span>${t("hidden")} (${HIDDEN_COUNT})</span>${svg("chevD")}</div>
+  </div>`;
+}
+function bindConnections(){
+ document.querySelectorAll(".story").forEach(s=>s.onclick=()=>{ S.detailPid=s.dataset.pid; S.detailBack="connections"; S.screen="detail"; render(); });
+ document.querySelector('[data-act="hidden"]').onclick=()=>toast(t("demo"));
+ let openRow=null;
+ document.querySelectorAll(".citem[data-pid]").forEach(item=>{
+   const row=item.querySelector(".crow");
+   let sx=0,dx=0,dragging=false,startOpen=false,moved=false;
+   const move=e=>{
+     if(!dragging)return;
+     dx=e.clientX-sx; if(Math.abs(dx)>6)moved=true;
+     let base=startOpen?-164:0;
+     let x=Math.min(0,Math.max(-164,base+dx));
+     row.style.transform=`translateX(${x}px)`;
+   };
+   const cleanup=()=>{
+     window.removeEventListener("pointermove",move);
+     window.removeEventListener("pointerup",end);
+     window.removeEventListener("pointercancel",end);
+     window.removeEventListener("blur",end);
+   };
+   const end=()=>{
+     if(!dragging)return;dragging=false;cleanup();row.style.transition="";
+     const base=startOpen?-164:0, x=base+dx;
+     if(x<-82){ row.style.transform="translateX(-164px)"; if(openRow&&openRow!==item)openRow.querySelector(".crow").style.transform=""; openRow=item; }
+     else{ row.style.transform=""; if(openRow===item)openRow=null; }
+     dx=0;
+   };
+   row.addEventListener("pointerdown",e=>{
+     if(e.target.closest("button")) return;
+     dragging=true;moved=false;sx=e.clientX;startOpen=(openRow===item);
+     try{ row.setPointerCapture(e.pointerId); }catch(_){}
+     row.style.transition="none";
+     window.addEventListener("pointermove",move);
+     window.addEventListener("pointerup",end);
+     window.addEventListener("pointercancel",end);
+     window.addEventListener("blur",end);
+   });
+   row.addEventListener("lostpointercapture",end);
+   row.addEventListener("click",()=>{
+     if(moved)return;
+     if(openRow===item){ row.style.transform=""; openRow=null; return; }
+     const c=S.chats.find(x=>x.pid===item.dataset.pid); c.unread=0;
+     S.chatId=item.dataset.pid; S.backTo="connections"; S.screen="chat"; render();
+   });
+   item.querySelector('[data-a="met"]').onclick=e=>{ e.stopPropagation(); row.style.transform=""; openRow=null; toast(t("meeting_rec")); };
+   item.querySelector('[data-a="un"]').onclick=e=>{
+     e.stopPropagation();
+     S.chats=S.chats.filter(x=>x.pid!==item.dataset.pid);
+     toast(t("removed")); render();
+   };
+ });
+}
+
+/* ==== CHAT ==== */
+function rChat(){
+ const c=S.chats.find(x=>x.pid===S.chatId), p=pById(S.chatId);
+ return `
+  <div class="chathead">
+    <button class="back" data-act="back">${svg("back")}</button>
+    ${avatar(p,"av")}
+    <div><div class="n">${p.name}</div><div class="st">${t("online")}</div></div>
+  </div>
+  <div class="msgs" id="msgs">
+    ${c.msgs.map(m=>`<div class="msg ${m.f?"them":"me"}">${m.t}</div>`).join("")}
+  </div>
+  <div class="composer">
+    <input id="minput" placeholder="${t("msg_ph")}" autocomplete="off">
+    <button id="msend">${svg("send")}</button>
+  </div>`;
+}
+function bindChat(){
+ const c=S.chats.find(x=>x.pid===S.chatId);
+ const box=document.getElementById("msgs");
+ box.scrollTop=box.scrollHeight;
+ document.querySelector('[data-act="back"]').onclick=()=>{ S.screen="connections"; render(); };
+ const input=document.getElementById("minput");
+ const send=()=>{
+   let txt=input.value.trim(); if(!txt)return;
+   txt=txt.replace(/</g,"&lt;");
+   c.msgs.push({f:0,t:txt}); input.value="";
+   box.insertAdjacentHTML("beforeend",`<div class="msg me">${txt}</div>`);
+   box.scrollTop=box.scrollHeight;
+   if(c.autoReply&&c.autoReply.length){
+     const reply=c.autoReply.shift();
+     const tEl=document.createElement("div");tEl.className="typing";tEl.textContent="…";
+     setTimeout(()=>{box.appendChild(tEl);box.scrollTop=box.scrollHeight;},500);
+     setTimeout(()=>{
+       tEl.remove(); c.msgs.push({f:1,t:reply});
+       box.insertAdjacentHTML("beforeend",`<div class="msg them">${reply}</div>`);
+       box.scrollTop=box.scrollHeight;
+     },1600);
+   }
+ };
+ document.getElementById("msend").onclick=send;
+ input.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
+}
+
+/* ==== ANALYTICS ==== */
+function rAnalytics(){
+ return `<div class="pagetitle">${t("analytics")}</div><div class="anwrap">
+  <div class="periods">${t("days").map((d,i)=>`<button class="per ${i===S.per?"on":""}" data-i="${i}">${d}</button>`).join("")}</div>
+  <div class="km">${t("key_metrics")}</div><div class="km-sub">${t("period")}</div>
+  <div class="mgrid">${METRICS.map(m=>`
+   <div class="mcard"><div class="l">${m.l}</div><div class="v">${m.v}</div>
+   <div class="d ${m.neg?"neg":"pos"}">${svg(m.neg?"down":"up")}${m.d}</div></div>`).join("")}
+  </div></div>`;
+}
+function bindAnalytics(){
+ document.querySelectorAll(".per").forEach(b=>b.onclick=()=>{ S.per=+b.dataset.i; render(); });
+}
+
+/* ==== MY PROFILE ==== */
+function rMe(){
+ const p=pById(PERSONAS[S.role].pid);
+ const rl = S.role==="spon" ? `${t("r_spon")} · ${PERSONAS.spon.tier}` : roleLabel(S.role);
+ return `<div class="pagetitle">${t("profile")}</div><div class="mywrap">
+  <div class="mycard">
+    ${avatar(p,"av")}
+    <div><div class="n">${p.name}</div><span class="r">${rl.toUpperCase()}</span></div>
+  </div>
+  <div class="setgrp">
+   <div class="setrow">${svg("lang")}<span>${t("lang")}</span>
+     <span class="seg"><button data-l="en" class="${S.lang==="en"?"on":""}">EN</button><button data-l="ru" class="${S.lang==="ru"?"on":""}">RU</button></span>
+   </div>
+   <div class="setrow" data-act="edit">${svg("pencil")}<span>${t("edit")}</span>${svg("chevR","chev")}</div>
+   <div class="setrow" data-act="links">${svg("link")}<span>${t("my_link")}</span>${svg("chevR","chev")}</div>
+   <div class="setrow" data-act="notif">${svg("bell")}<span>${t("notif")}</span>${svg("chevR","chev")}</div>
+  </div>
+ </div>`;
+}
+function bindMe(){
+ document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{ S.lang=b.dataset.l; render(); });
+ document.querySelectorAll('[data-act="edit"],[data-act="links"],[data-act="notif"]').forEach(b=>b.onclick=()=>toast(t("demo")));
+ const _sw=document.querySelector('[data-act="switch"]'); if(_sw) _sw.addEventListener("click",()=>{ S.screen="picker"; render(); });
+}
+
+window.onerror=function(msg,src2,line){
+ var v=document.getElementById("view");
+ if(v&&!v.innerHTML) v.innerHTML='<div style="padding:50px 24px;font-size:12px;color:#93A0C9;line-height:1.6">Ошибка запуска: '+msg+' (строка '+line+').<br>Сообщите разработчику модель телефона.</div>';
+};
+S.role="sup"; buildFeed(); S.screen="feed";
+render();
+</script>
+</body>
+</html>
