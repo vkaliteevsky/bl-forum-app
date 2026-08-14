@@ -795,7 +795,30 @@ function rFeed(){
 }
 function advanceFeed(){
  do{ S.feedIdx++; } while(S.feedOrder[S.feedIdx] && S.feedOrder[S.feedIdx].type==="s" && S.dismissedSponsors.has(S.feedOrder[S.feedIdx].id));
- render();
+ const stack=document.querySelector(".stack");
+ const items=currentFeedItems();
+ if(!stack || !items.length){ render(); return; }
+ const top=stack.querySelector(".fcard.topmost");
+ if(top) top.remove();
+ const under=stack.querySelector(".fcard.under");
+ if(!under){ render(); return; }
+ /* нижняя карточка плавно доезжает до полного размера, картинки в ней уже загружены */
+ under.style.transition="transform .22s ease-out, filter .22s ease-out";
+ under.classList.remove("under");
+ under.classList.add("topmost");
+ setTimeout(()=>{ under.style.transition=""; },240);
+ /* подкладываю следующую карточку вниз стопки */
+ if(items[1]){
+   const o=items[1];
+   const div=document.createElement("div");
+   div.className="fcard "+(o.type==="s"?"spcard ":"")+"under";
+   div.dataset.id=o.id; div.dataset.type=o.type;
+   div.innerHTML = o.type==="s" ? rSponsorFeed(SPONSOR_CARDS.find(x=>x.id===o.id)) : rProfileCard(pById(o.id));
+   stack.insertBefore(div, stack.firstChild);
+ }
+ bindFeed();
+ document.getElementById("tabs").innerHTML=rTabs();
+ bindCommon();
 }
 function flyOut(card, dir, cb){
  card.style.transition="transform .32s ease-in, opacity .32s";
